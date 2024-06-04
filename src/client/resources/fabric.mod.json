@@ -1,0 +1,27 @@
+{
+	"schemaVersion": 1,
+	"id": "notesmod",
+	"version": "${version}",
+	"name": "Example Notes Mod",
+	"description": "An mod that allows you to take per-server notes; example for JackFredLib",
+	"authors": [
+		"JackFred"
+	],
+	"contact": {
+		"homepage": "https://github.com/JackFred2/ExampleNotesMod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/notesmod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"client": [
+			"red.jackf.notes.NotesMod"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.15.10",
+		"minecraft": "~1.20.6",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

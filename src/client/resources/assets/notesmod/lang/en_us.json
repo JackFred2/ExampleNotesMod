@@ -1,0 +1,8 @@
+{
+  "notesmod.loaded": "Loaded note for %s",
+  "notesmod.saved": "Saved note for %s",
+  "notesmod.editingNote": "Editing note",
+
+  "category.notesmod": "Notes",
+  "notesmod.key.editNote": "Edit Current Note"
+}
