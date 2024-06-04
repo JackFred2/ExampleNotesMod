@@ -30,60 +30,9 @@ public class NotesMod implements ClientModInitializer {
     private String currentNote = "";
     private @Nullable Coordinate currentCoordinate = null;
 
-    @Override
-    public void onInitializeClient() {
-		KeyBindingHelper.registerKeyBinding(OPEN_NOTES);
-
-        // Load the note on game connect;
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            Coordinate.getCurrent().ifPresent(coordinate -> {
-                currentNote = NotesIO.load(coordinate.id());
-
-                // we save the Coordinate for when we disconnect, as we cannot grab the one we were on at that point
-                currentCoordinate = coordinate;
-
-                // Send a toast saying we've loaded
-                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.loaded", coordinate.userFriendlyName()))
-                        .expiresAfter(2500L)
-						.progressShowsVisibleTime()
-                        .withIcon(ToastIcon.modIcon(ID))
-                        .build());
-            });
-        });
-
-        // Save the note on disconnect
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            if (currentCoordinate != null) {
-                NotesIO.save(currentCoordinate.id(), currentNote);
-
-                // Send a toast saying we've saved
-				Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.saved", currentCoordinate.userFriendlyName()))
-						.expiresAfter(2500L)
-						.progressShowsVisibleTime()
-						.withIcon(ToastIcon.modIcon(ID))
-						.build());
-            }
-
-            currentCoordinate = null;
-            currentNote = "";
-        });
-
-        // Open the edit note GUI
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (client.currentScreen == null && client.getOverlay() == null)
-                while (OPEN_NOTES.wasPressed()) {
-                    MinecraftClient.getInstance().setScreen(new EditNoteScreen(currentNote, newText -> this.currentNote = newText));
-                }
-        });
-
-        // Draw the note
-        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
-            if (!currentNote.isBlank()) {
-                renderNote(drawContext, currentNote);
-            }
-        });
-    }
-
+    /**
+     * Renders the note on-screen, filling a background so that it encompasses the whole note
+     */
     private static void renderNote(DrawContext context, String contents) {
         List<String> lines = List.of(contents.split("\n"));
         TextRenderer text = MinecraftClient.getInstance().textRenderer;
@@ -100,5 +49,62 @@ public class NotesMod implements ClientModInitializer {
         for (int i = 0; i < lines.size(); i++) {
             context.drawText(MinecraftClient.getInstance().textRenderer, lines.get(i), 10, 10 + text.fontHeight * i, 0xFF_FFFFFF, true);
         }
+    }
+
+    @Override
+    public void onInitializeClient() {
+        KeyBindingHelper.registerKeyBinding(OPEN_NOTES);
+
+        // Load the note on game connect;
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            Coordinate.getCurrent().ifPresent(coordinate -> {
+                // Load a note using the given file safe ID
+                currentNote = NotesIO.load(coordinate.id());
+
+                // We save the Coordinate as we cannot grab it upon disconnect
+                currentCoordinate = coordinate;
+
+                // Send a toast saying we've loaded
+                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.loaded", coordinate.userFriendlyName()))
+                        .expiresAfter(2500L)
+                        .progressShowsVisibleTime()
+                        .withIcon(ToastIcon.modIcon(ID))
+                        .build());
+            });
+        });
+
+        // Save the note on disconnect
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            if (currentCoordinate != null) {
+                // Save the note using the file safe ID
+                NotesIO.save(currentCoordinate.id(), currentNote);
+
+                // Send a toast saying we've saved
+                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.saved", currentCoordinate.userFriendlyName()))
+                        .expiresAfter(2500L)
+                        .progressShowsVisibleTime()
+                        .withIcon(ToastIcon.modIcon(ID))
+                        .build());
+            }
+
+            currentCoordinate = null;
+            currentNote = "";
+        });
+
+        // Open the edit note GUI
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            if (client.currentScreen == null && client.getOverlay() == null)
+                while (OPEN_NOTES.wasPressed()) {
+                    MinecraftClient.getInstance()
+                            .setScreen(new EditNoteScreen(currentNote, newText -> this.currentNote = newText));
+                }
+        });
+
+        // Draw the note
+        HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
+            if (!currentNote.isBlank()) {
+                renderNote(drawContext, currentNote);
+            }
+        });
     }
 }

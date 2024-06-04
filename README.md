@@ -9,3 +9,7 @@ Example GIF: https://i.imgur.com/mbn3uy9.gif
 
 Press `[N]` to open the editor while in-game. Press escape to close the GUI. Notes are stored under
 `notesmod` in your game directory.
+
+# License
+
+CC0 1.0; feel free to use and look about

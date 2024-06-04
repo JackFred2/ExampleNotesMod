@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 public class NotesIO {
+    // <game instance>/notesmod/
     private static final Path DIRECTORY = FabricLoader.getInstance().getGameDir().resolve(NotesMod.ID);
 
     private static Path getPath(String id) {
