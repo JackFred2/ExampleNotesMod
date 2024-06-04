@@ -1,9 +1,11 @@
-# Fabric Example Mod
+# Example Notes Mod
 
-## Setup
+A mod that lets you create and update simple text notes on a per-world/realm/server basis.
+Created to show the features of the [GPS and Toasts JackFredLib modules](https://github.com/JackFred2/JackFredLib).
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+![Example of the note being made](https://i.imgur.com/mbn3uy9.gif)
 
-## License
+## Usage
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+Press `[N]` to open the editor while in-game. Press escape to close the GUI. Notes are stored under
+`notesmod` in your game directory.

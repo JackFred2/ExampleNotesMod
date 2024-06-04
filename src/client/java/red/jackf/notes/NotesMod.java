@@ -10,7 +10,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +20,6 @@ import red.jackf.jackfredlib.client.api.toasts.ToastFormat;
 import red.jackf.jackfredlib.client.api.toasts.ToastIcon;
 import red.jackf.jackfredlib.client.api.toasts.Toasts;
 
-import java.util.Comparator;
 import java.util.List;
 
 public class NotesMod implements ClientModInitializer {
@@ -32,19 +30,19 @@ public class NotesMod implements ClientModInitializer {
     private String currentNote = "";
     private @Nullable Coordinate currentCoordinate = null;
 
-    public static Identifier id(String path) {
-        return new Identifier(ID, path);
-    }
-
     @Override
     public void onInitializeClient() {
 		KeyBindingHelper.registerKeyBinding(OPEN_NOTES);
 
+        // Load the note on game connect;
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             Coordinate.getCurrent().ifPresent(coordinate -> {
                 currentNote = NotesIO.load(coordinate.id());
+
+                // we save the Coordinate for when we disconnect, as we cannot grab the one we were on at that point
                 currentCoordinate = coordinate;
 
+                // Send a toast saying we've loaded
                 Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.loaded", coordinate.userFriendlyName()))
                         .expiresAfter(2500L)
 						.progressShowsVisibleTime()
@@ -53,10 +51,12 @@ public class NotesMod implements ClientModInitializer {
             });
         });
 
+        // Save the note on disconnect
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             if (currentCoordinate != null) {
                 NotesIO.save(currentCoordinate.id(), currentNote);
 
+                // Send a toast saying we've saved
 				Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.saved", currentCoordinate.userFriendlyName()))
 						.expiresAfter(2500L)
 						.progressShowsVisibleTime()
@@ -68,6 +68,7 @@ public class NotesMod implements ClientModInitializer {
             currentNote = "";
         });
 
+        // Open the edit note GUI
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (client.currentScreen == null && client.getOverlay() == null)
                 while (OPEN_NOTES.wasPressed()) {
@@ -75,6 +76,7 @@ public class NotesMod implements ClientModInitializer {
                 }
         });
 
+        // Draw the note
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             if (!currentNote.isBlank()) {
                 renderNote(drawContext, currentNote);
@@ -85,6 +87,8 @@ public class NotesMod implements ClientModInitializer {
     private static void renderNote(DrawContext context, String contents) {
         List<String> lines = List.of(contents.split("\n"));
         TextRenderer text = MinecraftClient.getInstance().textRenderer;
+
+        // Calculate the dimensions that cover our note's lines
         int maxWidth = lines.stream().mapToInt(text::getWidth).max().orElse(0);
         int height = text.fontHeight * lines.size();
 
