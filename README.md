@@ -3,7 +3,7 @@
 A mod that lets you create and update simple text notes on a per-world/realm/server basis.
 Created to show the features of the [GPS and Toasts JackFredLib modules](https://github.com/JackFred2/JackFredLib).
 
-![Example of the note being made](https://i.imgur.com/mbn3uy9.gif)
+Example GIF: https://i.imgur.com/mbn3uy9.gif
 
 ## Usage
 
