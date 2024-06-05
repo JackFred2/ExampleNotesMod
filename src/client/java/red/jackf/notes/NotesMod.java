@@ -5,11 +5,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.text.Text;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -26,28 +26,28 @@ public class NotesMod implements ClientModInitializer {
     public static final String ID = "notesmod";
     public static final Logger LOGGER = LogManager.getLogger();
 
-    private static final KeyBinding OPEN_NOTES = new KeyBinding("notesmod.key.editNote", GLFW.GLFW_KEY_N, "category.notesmod");
+    private static final KeyMapping OPEN_NOTES = new KeyMapping("notesmod.key.editNote", GLFW.GLFW_KEY_N, "category.notesmod");
     private String currentNote = "";
     private @Nullable Coordinate currentCoordinate = null;
 
     /**
      * Renders the note on-screen, filling a background so that it encompasses the whole note
      */
-    private static void renderNote(DrawContext context, String contents) {
+    private static void renderNote(GuiGraphics graphics, String contents) {
         List<String> lines = List.of(contents.split("\n"));
-        TextRenderer text = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
 
         // Calculate the dimensions that cover our note's lines
-        int maxWidth = lines.stream().mapToInt(text::getWidth).max().orElse(0);
-        int height = text.fontHeight * lines.size();
+        int maxWidth = lines.stream().mapToInt(font::width).max().orElse(0);
+        int height = font.lineHeight * lines.size();
 
         final int x = 10;
         final int y = 10;
 
-        context.fill(x - 3, y - 3, x + maxWidth + 3, y + height + 3, 0x40_000000);
+        graphics.fill(x - 3, y - 3, x + maxWidth + 3, y + height + 3, 0x40_000000);
 
         for (int i = 0; i < lines.size(); i++) {
-            context.drawText(MinecraftClient.getInstance().textRenderer, lines.get(i), 10, 10 + text.fontHeight * i, 0xFF_FFFFFF, true);
+            graphics.drawString(Minecraft.getInstance().font, lines.get(i), 10, 10 + font.lineHeight * i, 0xFF_FFFFFF, true);
         }
     }
 
@@ -65,7 +65,7 @@ public class NotesMod implements ClientModInitializer {
                 currentCoordinate = coordinate;
 
                 // Send a toast saying we've loaded
-                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.loaded", coordinate.userFriendlyName()))
+                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Component.translatable("notesmod.loaded", coordinate.userFriendlyName()))
                         .expiresAfter(2500L)
                         .progressShowsVisibleTime()
                         .withIcon(ToastIcon.modIcon(ID))
@@ -80,7 +80,7 @@ public class NotesMod implements ClientModInitializer {
                 NotesIO.save(currentCoordinate.id(), currentNote);
 
                 // Send a toast saying we've saved
-                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Text.translatable("notesmod.saved", currentCoordinate.userFriendlyName()))
+                Toasts.INSTANCE.send(ToastBuilder.builder(ToastFormat.DARK, Component.translatable("notesmod.saved", currentCoordinate.userFriendlyName()))
                         .expiresAfter(2500L)
                         .progressShowsVisibleTime()
                         .withIcon(ToastIcon.modIcon(ID))
@@ -93,9 +93,9 @@ public class NotesMod implements ClientModInitializer {
 
         // Open the edit note GUI
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (client.currentScreen == null && client.getOverlay() == null)
-                while (OPEN_NOTES.wasPressed()) {
-                    MinecraftClient.getInstance()
+            if (client.screen == null && client.getOverlay() == null)
+                while (OPEN_NOTES.consumeClick()) {
+                    Minecraft.getInstance()
                             .setScreen(new EditNoteScreen(currentNote, newText -> this.currentNote = newText));
                 }
         });

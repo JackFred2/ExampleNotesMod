@@ -1,9 +1,9 @@
 package red.jackf.notes;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.EditBoxWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 
@@ -16,7 +16,7 @@ public class EditNoteScreen extends Screen {
     private final Consumer<String> onUpdate;
 
     protected EditNoteScreen(String currentText, Consumer<String> onUpdate) {
-        super(Text.translatable("notesmod.editingNote"));
+        super(Component.translatable("notesmod.editingNote"));
         this.currentText = currentText;
         this.onUpdate = onUpdate;
     }
@@ -33,11 +33,11 @@ public class EditNoteScreen extends Screen {
         int width = WIDTH - 2 * PAD;
         int height = HEIGHT - 2 * PAD;
 
-        var editbox = new EditBoxWidget(MinecraftClient.getInstance().textRenderer, x, y, width, height, Text.empty(), Text.empty());
-        editbox.setChangeListener(this.onUpdate);
-        editbox.setText(currentText);
+        var editbox = new MultiLineEditBox(Minecraft.getInstance().font, x, y, width, height, Component.empty(), Component.empty());
+        editbox.setValueListener(this.onUpdate);
+        editbox.setValue(currentText);
 
-        this.addDrawableChild(editbox);
+        this.addRenderableWidget(editbox);
 
         this.setInitialFocus(editbox);
     }
